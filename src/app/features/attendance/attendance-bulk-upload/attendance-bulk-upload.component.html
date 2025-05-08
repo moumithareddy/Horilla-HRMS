@@ -1,0 +1,57 @@
+<div class="bulk-upload-dialog-container">
+  <h2 mat-dialog-title>Bulk Upload Attendance Records</h2>
+  
+  <div *ngIf="isLoading" class="loading-overlay">
+    <app-loading-spinner></app-loading-spinner>
+  </div>
+  
+  <mat-dialog-content class="dialog-content">
+    <p class="instructions">
+      Upload an Excel file with attendance records. 
+      <button mat-button color="primary" (click)="downloadSampleExcel()">
+        <i class="fa fa-download"></i> Download Sample Template
+      </button>
+    </p>
+    
+    <form [formGroup]="uploadForm" class="upload-form">
+      <div class="file-upload-container">
+        <input
+          type="file"
+          #fileInput
+          style="display: none"
+          accept=".xls,.xlsx"
+          (change)="onFileChange($event)"
+        />
+        
+        <div class="upload-box" (click)="fileInput.click()">
+          <i class="fa fa-cloud-upload-alt upload-icon"></i>
+          <p>Click to select an Excel file</p>
+          <p *ngIf="fileName" class="file-name">Selected: {{ fileName }}</p>
+        </div>
+      </div>
+      
+      <mat-checkbox formControlName="skipHeader" color="primary">
+        Skip header row (first row contains column headers)
+      </mat-checkbox>
+    </form>
+    
+    <div class="format-guidelines">
+      <h3>File Format Guidelines</h3>
+      <p>Your Excel file should have the following columns:</p>
+      <ul>
+        <li><strong>Employee ID</strong> - Numeric ID of the employee</li>
+        <li><strong>Employee Name</strong> - Name of the employee</li>
+        <li><strong>Department</strong> - Department name</li>
+        <li><strong>Date (YYYY-MM-DD)</strong> - Attendance date in YYYY-MM-DD format</li>
+        <li><strong>Clock In Time (HH:MM)</strong> - Time of clock in in 24-hour format</li>
+        <li><strong>Clock Out Time (HH:MM)</strong> - Time of clock out in 24-hour format</li>
+        <li><strong>Work Hours</strong> - Number of hours worked</li>
+        <li><strong>Status</strong> - Attendance status (Present, Absent, Late, etc.)</li>
+      </ul>
+    </div>
+  </mat-dialog-content>
+  
+  <mat-dialog-actions align="end">
+    <button mat-button (click)="cancel()" [disabled]="isLoading">Cancel</button>
+  </mat-dialog-actions>
+</div>

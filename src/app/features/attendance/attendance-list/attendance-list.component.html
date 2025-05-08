@@ -1,0 +1,178 @@
+<app-page-header 
+  title="Attendance Records" 
+  subtitle="View and manage employee attendance records"
+  icon="fa fa-calendar-check">
+</app-page-header>
+
+<div class="attendance-list-container">
+  <!-- Filter & Actions Card -->
+  <mat-card class="filter-card">
+    <mat-card-content>
+      <div class="filter-actions-container">
+        <!-- Filter Form -->
+        <form [formGroup]="filterForm" (ngSubmit)="applyFilter()" class="filter-form">
+          <div class="filter-fields">
+            <div class="top-row">
+              <mat-form-field appearance="outline">
+                <mat-label>Employee</mat-label>
+                <mat-select formControlName="employeeId">
+                  <mat-option value="">All Employees</mat-option>
+                  <!-- Employee options would be populated from API -->
+                </mat-select>
+              </mat-form-field>
+              
+              <mat-form-field appearance="outline">
+                <mat-label>Department</mat-label>
+                <mat-select formControlName="departmentId">
+                  <mat-option value="">All Departments</mat-option>
+                  <mat-option value="1">HR</mat-option>
+                  <mat-option value="2">Engineering</mat-option>
+                  <mat-option value="3">Finance</mat-option>
+                  <mat-option value="4">Marketing</mat-option>
+                  <mat-option value="5">Sales</mat-option>
+                </mat-select>
+              </mat-form-field>
+              
+              <mat-form-field appearance="outline">
+                <mat-label>Status</mat-label>
+                <mat-select formControlName="status">
+                  <mat-option value="">All Statuses</mat-option>
+                  <mat-option *ngFor="let status of statuses" [value]="status.id">
+                    {{ status.name }}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div>
+            
+            <div class="date-row" formGroupName="dateRange">
+              <mat-form-field appearance="outline">
+                <mat-label>Start Date</mat-label>
+                <input matInput [matDatepicker]="startPicker" formControlName="start">
+                <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
+                <mat-datepicker #startPicker></mat-datepicker>
+              </mat-form-field>
+              
+              <mat-form-field appearance="outline">
+                <mat-label>End Date</mat-label>
+                <input matInput [matDatepicker]="endPicker" formControlName="end">
+                <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
+                <mat-datepicker #endPicker></mat-datepicker>
+              </mat-form-field>
+            </div>
+          </div>
+          
+          <div class="filter-actions">
+            <button type="submit" mat-raised-button color="primary">
+              <i class="fa fa-search"></i> Apply Filter
+            </button>
+            <button type="button" mat-button (click)="resetFilter()">
+              <i class="fa fa-times"></i> Reset
+            </button>
+          </div>
+        </form>
+        
+        <!-- Action Buttons -->
+        <div class="record-actions">
+          <button mat-raised-button color="accent" (click)="openAddSingleAttendanceDialog()">
+            <i class="fa fa-plus-circle"></i> Add Attendance
+          </button>
+          <button mat-raised-button color="primary" (click)="openBulkUploadDialog()">
+            <i class="fa fa-file-excel"></i> Bulk Upload
+          </button>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Loading Spinner -->
+  <div *ngIf="isLoading" class="loading-container">
+    <app-loading-spinner></app-loading-spinner>
+  </div>
+
+  <!-- Data Table -->
+  <div *ngIf="!isLoading" class="table-container mat-elevation-z2">
+    <table mat-table [dataSource]="dataSource" matSort>
+      <!-- Employee Name Column -->
+      <ng-container matColumnDef="employee_name">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Employee</th>
+        <td mat-cell *matCellDef="let attendance">{{ attendance.employee_name }}</td>
+      </ng-container>
+
+      <!-- Date Column -->
+      <ng-container matColumnDef="attendance_date">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Date</th>
+        <td mat-cell *matCellDef="let attendance">{{ attendance.attendance_date | date:'mediumDate' }}</td>
+      </ng-container>
+
+      <!-- Clock In Column -->
+      <ng-container matColumnDef="attendance_clock_in_time">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Clock In</th>
+        <td mat-cell *matCellDef="let attendance">{{ attendance.attendance_clock_in_time || 'N/A' }}</td>
+      </ng-container>
+
+      <!-- Clock Out Column -->
+      <ng-container matColumnDef="attendance_clock_out_time">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Clock Out</th>
+        <td mat-cell *matCellDef="let attendance">{{ attendance.attendance_clock_out_time || 'N/A' }}</td>
+      </ng-container>
+
+      <!-- Work Hours Column -->
+      <ng-container matColumnDef="attendance_worked_hour">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Work Hours</th>
+        <td mat-cell *matCellDef="let attendance">{{ attendance.attendance_worked_hour || '0.00' }}</td>
+      </ng-container>
+
+      <!-- Status Column -->
+      <ng-container matColumnDef="attendance_status">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
+        <td mat-cell *matCellDef="let attendance">
+          <span class="status-badge" [style.background-color]="getStatusColor(attendance.attendance_status)">
+            {{ attendance.attendance_status }}
+          </span>
+        </td>
+      </ng-container>
+
+      <!-- Overtime Column -->
+      <ng-container matColumnDef="attendance_overtime_hour">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Overtime</th>
+        <td mat-cell *matCellDef="let attendance">{{ attendance.attendance_overtime_hour || '0.00' }}</td>
+      </ng-container>
+
+      <!-- Department Column -->
+      <ng-container matColumnDef="department_name">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Department</th>
+        <td mat-cell *matCellDef="let attendance">{{ attendance.department_name }}</td>
+      </ng-container>
+
+      <!-- Actions Column -->
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef>Actions</th>
+        <td mat-cell *matCellDef="let attendance">
+          <button mat-icon-button [matMenuTriggerFor]="actionMenu" aria-label="Actions">
+            <mat-icon>more_vert</mat-icon>
+          </button>
+          <mat-menu #actionMenu="matMenu">
+            <button mat-menu-item>
+              <mat-icon>edit</mat-icon>
+              <span>Edit</span>
+            </button>
+            <button mat-menu-item (click)="deleteAttendance(attendance.id)">
+              <mat-icon>delete</mat-icon>
+              <span>Delete</span>
+            </button>
+          </mat-menu>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+
+      <!-- No Data Row -->
+      <tr class="mat-row" *matNoDataRow>
+        <td class="mat-cell" colspan="9">No attendance records found</td>
+      </tr>
+    </table>
+
+    <mat-paginator [pageSizeOptions]="[10, 25, 50, 100]" showFirstLastButtons></mat-paginator>
+  </div>
+</div>

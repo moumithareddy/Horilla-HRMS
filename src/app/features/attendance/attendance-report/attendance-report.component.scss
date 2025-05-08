@@ -1,0 +1,138 @@
+.report-container {
+  padding: 20px;
+  
+  .report-sections {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+    gap: 24px;
+    
+    .report-card {
+      height: 100%;
+      
+      .mat-card-header {
+        margin-bottom: 16px;
+      }
+      
+      form {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        
+        .form-row {
+          width: 100%;
+          
+          mat-form-field {
+            width: 100%;
+          }
+          
+          &.date-range {
+            display: flex;
+            gap: 16px;
+            
+            mat-form-field {
+              flex: 1;
+            }
+          }
+        }
+        
+        .form-actions {
+          display: flex;
+          gap: 16px;
+          justify-content: flex-end;
+          margin-top: 16px;
+          
+          button {
+            min-width: 120px;
+            
+            .spinner {
+              display: inline-block;
+              margin-right: 8px;
+              vertical-align: middle;
+            }
+            
+            i {
+              margin-right: 8px;
+            }
+          }
+        }
+      }
+      
+      .loading-container {
+        display: flex;
+        justify-content: center;
+        padding: 50px 0;
+      }
+      
+      .no-reports {
+        text-align: center;
+        padding: 40px 0;
+        
+        p {
+          font-size: 16px;
+          color: rgba(0, 0, 0, 0.54);
+        }
+      }
+      
+      .reports-list {
+        .mat-table {
+          width: 100%;
+          
+          .mat-column-name {
+            min-width: 180px;
+          }
+          
+          .mat-column-type,
+          .mat-column-format {
+            min-width: 100px;
+          }
+          
+          .mat-column-date {
+            min-width: 120px;
+          }
+          
+          .mat-column-actions {
+            width: 100px;
+            text-align: center;
+          }
+        }
+      }
+    }
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .report-container {
+    padding: 16px;
+    
+    .report-sections {
+      grid-template-columns: 1fr;
+      
+      .report-card {
+        form {
+          .form-row {
+            &.date-range {
+              flex-direction: column;
+              gap: 16px;
+            }
+          }
+          
+          .form-actions {
+            flex-direction: column;
+            
+            button {
+              width: 100%;
+            }
+          }
+        }
+        
+        .reports-list {
+          overflow-x: auto;
+          
+          .mat-table {
+            min-width: 600px;
+          }
+        }
+      }
+    }
+  }
+}

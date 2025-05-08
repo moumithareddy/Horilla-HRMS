@@ -1,0 +1,66 @@
+<div class="app-container">
+  <!-- App Header -->
+  <div class="app-header">
+    <div class="header-left">
+      <div class="logo">
+        <h1>Horilla HRMS</h1>
+      </div>
+    </div>
+    
+    <!-- Time display removed from header -->
+    
+    <div class="user-actions">
+      <button class="user-profile">
+        <i class="fa fa-user"></i>
+      </button>
+    </div>
+  </div>
+  
+  <!-- Sidebar -->
+  <div class="app-sidebar">
+    <div class="sidebar-header">
+      <h3>Attendance Module</h3>
+    </div>
+    <nav class="sidebar-nav">
+      <ul>
+        <li><a routerLink="/attendance/dashboard" routerLinkActive="active">
+          <i class="fa fa-chart-line"></i>
+          <span class="nav-text">Dashboard</span>
+        </a></li>
+        <li><a routerLink="/attendance/list" routerLinkActive="active">
+          <i class="fa fa-list"></i>
+          <span class="nav-text">Attendance</span>
+        </a></li>
+        <li><a routerLink="/attendance/requests" routerLinkActive="active">
+          <i class="fa fa-clipboard-list"></i>
+          <span class="nav-text">Requests</span>
+        </a></li>
+        <li><a routerLink="/attendance/hour-account" routerLinkActive="active">
+          <i class="fa fa-clock"></i>
+          <span class="nav-text">Hours</span>
+        </a></li>
+        <li><a routerLink="/attendance/late-early" routerLinkActive="active">
+          <i class="fa fa-hourglass-half"></i>
+          <span class="nav-text">Late/Early</span>
+        </a></li>
+        <li><a routerLink="/attendance/work-records" routerLinkActive="active">
+          <i class="fa fa-file-alt"></i>
+          <span class="nav-text">Work Records</span>
+        </a></li>
+        <li><a routerLink="/attendance/my-attendance" routerLinkActive="active">
+          <i class="fa fa-user-clock"></i>
+          <span class="nav-text">My Attendance</span>
+        </a></li>
+        <li><a routerLink="/attendance/report" routerLinkActive="active">
+          <i class="fa fa-chart-bar"></i>
+          <span class="nav-text">Reports</span>
+        </a></li>
+      </ul>
+    </nav>
+  </div>
+  
+  <!-- Main Content -->
+  <div class="app-content">
+    <router-outlet></router-outlet>
+  </div>
+</div>

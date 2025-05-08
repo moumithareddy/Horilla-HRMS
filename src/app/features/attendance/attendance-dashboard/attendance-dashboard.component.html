@@ -1,0 +1,276 @@
+<app-page-header 
+  title="Attendance Dashboard" 
+  subtitle="Overview of attendance metrics and analytics"
+  icon="fa fa-chart-line"
+  [showClockButtons]="true"
+  [isClockIn]="isClockIn"
+  (clockIn)="handleClockIn()"
+  (clockOut)="handleClockOut()">
+</app-page-header>
+
+<div *ngIf="isLoading" class="loading-container">
+  <app-loading-spinner></app-loading-spinner>
+</div>
+
+<div *ngIf="!isLoading" class="advanced-dashboard-container">
+  <!-- Top section - Filters on left, Pie chart on right -->
+  <div class="dashboard-top-section">
+    <!-- Left side: Filters -->
+    <div class="filters-container">
+      <div class="filter-card-wrapper">
+        <mat-card class="filter-card">
+          <mat-card-content class="filters-content">
+            <div class="filters-row">
+              <div class="filter-group date-filter">
+                <div class="filter-label">Date</div>
+                <mat-form-field appearance="outline">
+                  <mat-select [(value)]="statsFilterPeriod" (selectionChange)="onDateFilterChange()">
+                    <mat-option value="lastWeek">Last Week</mat-option>
+                    <mat-option value="lastMonth">Last Month</mat-option>
+                    <mat-option value="custom">Custom Date Range</mat-option>
+                  </mat-select>
+                </mat-form-field>
+                
+                <!-- Calendar dropdown for custom date range -->
+                <div class="calendar-dropdown" *ngIf="isShowingCustomDatePicker">
+                  <div class="calendar-header">
+                    <button mat-icon-button (click)="prevMonth()">
+                      <mat-icon>navigate_before</mat-icon>
+                    </button>
+                    <span>{{ currentMonth | date:'MMMM yyyy' }}</span>
+                    <button mat-icon-button (click)="nextMonth()">
+                      <mat-icon>navigate_next</mat-icon>
+                    </button>
+                  </div>
+                  
+                  <div class="weekdays">
+                    <span *ngFor="let day of ['S', 'M', 'T', 'W', 'T', 'F', 'S']">{{ day }}</span>
+                  </div>
+                  
+                  <div class="days">
+                    <div 
+                      *ngFor="let day of calendarDays" 
+                      class="day" 
+                      [class.other-month]="day.otherMonth"
+                      [class.selected]="day.selected"
+                      [class.today]="day.today"
+                      (click)="selectDate(day)">
+                      {{ day.date.getDate() }}
+                    </div>
+                  </div>
+                  
+                  <div class="calendar-actions">
+                    <button mat-flat-button color="primary" (click)="applyCustomDateRange()">Apply</button>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="filter-group department-filter">
+                <div class="filter-label">Departments</div>
+                <mat-form-field appearance="outline">
+                  <mat-select [(value)]="selectedDepartment" (selectionChange)="loadDashboardData()">
+                    <mat-option value="All">All</mat-option>
+                    <mat-option value="HR">HR</mat-option>
+                    <mat-option value="Engineering">Engineering</mat-option>
+                    <mat-option value="Finance">Finance</mat-option>
+                    <mat-option value="Marketing">Marketing</mat-option>
+                    <mat-option value="Sales">Sales</mat-option>
+                    <mat-option value="Administration">Administration</mat-option>
+                    <mat-option value="Accounting">Accounting</mat-option>
+                    <mat-option value="Customer Support">Customer Support</mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+      
+      <div class="filter-card-wrapper sick-casual-wrapper">
+        <mat-card class="filter-card sick-casual-card">
+          <mat-card-content>
+            <h3 class="stat-title">Sick Leave vs. Casual Leave</h3>
+            <div class="side-by-side-stats">
+              <div class="stat-box">
+                <div class="stat-box-value">{{ enhancedStats.sickLeave }}</div>
+                <div class="stat-box-label">Sick</div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-box-value">{{ enhancedStats.casualLeave }}</div>
+                <div class="stat-box-label">Casual</div>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </div>
+    
+    <!-- Right side: Pie chart -->
+    <div class="pie-chart-container">
+      <mat-card class="stat-card donut-card">
+        <mat-card-content>
+          <h3 class="stat-title">Employee Work Location Breakdown</h3>
+          <p class="stat-subtitle">Drill down to see shift details</p>
+          <div class="chart-legend">
+            <div class="legend-item">
+              <span class="legend-dot home-dot"></span>
+              <span>Home ({{enhancedStats.workLocationData.home}}%)</span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-dot office-dot"></span>
+              <span>Office ({{enhancedStats.workLocationData.office}}%)</span>
+            </div>
+          </div>
+          <div class="chart-container chart-clickable">
+            <canvas #locationChartCanvas width="200" height="200"></canvas>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </div>
+  
+  <!-- Statistics Cards Row -->
+  <div class="stats-row">
+    <mat-card class="stat-card">
+      <mat-card-content>
+        <h3 class="stat-title">Employee Days Absent</h3>
+        <div class="stat-value">{{ enhancedStats.employeeDaysAbsent }}</div>
+      </mat-card-content>
+    </mat-card>
+    
+    <mat-card class="stat-card">
+      <mat-card-content>
+        <h3 class="stat-title">Total Employees</h3>
+        <div class="stat-value">{{ enhancedStats.totalEmployees }}</div>
+      </mat-card-content>
+    </mat-card>
+    
+    <mat-card class="stat-card">
+      <mat-card-content>
+        <h3 class="stat-title">Pre-approved Absences</h3>
+        <div class="stat-value">{{ enhancedStats.preApprovedAbsences }}</div>
+      </mat-card-content>
+    </mat-card>
+    
+    <mat-card class="stat-card">
+      <mat-card-content>
+        <h3 class="stat-title">Overtime Hours</h3>
+        <div class="stat-value">{{ enhancedStats.overtimeHours }}</div>
+      </mat-card-content>
+    </mat-card>
+    
+    <mat-card class="stat-card">
+      <mat-card-content>
+        <h3 class="stat-title">Employee Days Present</h3>
+        <div class="stat-value">{{ enhancedStats.employeeDaysPresent }}</div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+  
+  <!-- Third Row - More Charts -->
+  <div class="stats-row charts-row">
+    <mat-card class="stat-card bar-chart-card full-width">
+      <mat-card-content>
+        <h3 class="stat-title">Attendance by Department</h3>
+        <div class="chart-container">
+          <canvas #deptAttendanceChartCanvas width="400" height="280"></canvas>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+  
+  <!-- Third Row Stats -->
+  <div class="stats-row">
+    <mat-card class="stat-card">
+      <mat-card-content>
+        <h3 class="stat-title">Unscheduled Days Leave</h3>
+        <div class="stat-value">{{ enhancedStats.unscheduledDaysLeave }}</div>
+      </mat-card-content>
+    </mat-card>
+    
+    <mat-card class="stat-card">
+      <mat-card-content>
+        <h3 class="stat-title">Employees on Probation</h3>
+        <div class="stat-value">{{ enhancedStats.employeesOnProbation }}</div>
+      </mat-card-content>
+    </mat-card>
+    
+    <mat-card class="stat-card">
+      <mat-card-content>
+        <h3 class="stat-title">Attendance Rate</h3>
+        <div class="stat-value">{{ enhancedStats.attendanceRate.toFixed(2) }}%</div>
+      </mat-card-content>
+    </mat-card>
+    
+    <mat-card class="stat-card">
+      <mat-card-content>
+        <h3 class="stat-title">Absenteeism Rate</h3>
+        <div class="stat-value">{{ enhancedStats.absenteeismRate.toFixed(2) }}%</div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+  
+  <!-- Original Charts (kept for backward compatibility) - These can be hidden with CSS if needed -->
+  <div class="original-charts hidden">
+    <div class="chart-container">
+      <canvas #todayAttendanceCanvas width="400" height="400"></canvas>
+    </div>
+    <div class="chart-container">
+      <canvas #statusDistributionCanvas width="400" height="400"></canvas>
+    </div>
+    <div class="chart-container">
+      <!-- Simple department chart with direct click navigation -->
+      <div class="department-chart-container">
+        <canvas #departmentAttendanceCanvas width="800" height="400"></canvas>
+      </div>
+      
+      <div class="chart-helper-text">Select a department to view detailed attendance records</div>
+      
+      <!-- Add highly visible navigation buttons styled as tabs for better clarity -->
+      <div class="department-tabs">
+        <button class="dept-tab hr-tab" (click)="navigateToDepartmentAttendance('HR')">
+          <span class="tab-label">HR</span>
+          <span class="tab-indicator"></span>
+        </button>
+        <button class="dept-tab engineering-tab" (click)="navigateToDepartmentAttendance('Engineering')">
+          <span class="tab-label">Engineering</span>
+          <span class="tab-indicator"></span>
+        </button>
+        <button class="dept-tab finance-tab" (click)="navigateToDepartmentAttendance('Finance')">
+          <span class="tab-label">Finance</span>
+          <span class="tab-indicator"></span>
+        </button>
+        <button class="dept-tab marketing-tab" (click)="navigateToDepartmentAttendance('Marketing')">
+          <span class="tab-label">Marketing</span>
+          <span class="tab-indicator"></span>
+        </button>
+        <button class="dept-tab sales-tab" (click)="navigateToDepartmentAttendance('Sales')">
+          <span class="tab-label">Sales</span>
+          <span class="tab-indicator"></span>
+        </button>
+      </div>
+    </div>
+    <div class="chart-container">
+      <canvas #dailyHoursCanvas width="800" height="300"></canvas>
+    </div>
+  </div>
+  
+  <!-- Quick Actions -->
+  <div class="quick-actions">
+    <h2>Quick Actions</h2>
+    <div class="action-buttons">
+      <button mat-raised-button color="accent" (click)="navigateTo('/attendance/list')">
+        <i class="fa fa-list"></i> View Attendance
+      </button>
+      <button mat-raised-button color="primary" (click)="navigateTo('/attendance/my-attendance')">
+        <i class="fa fa-user-clock"></i> My Attendance
+      </button>
+      <button mat-raised-button color="warn" (click)="navigateTo('/attendance/report')">
+        <i class="fa fa-file-alt"></i> Generate Report
+      </button>
+      <button mat-raised-button (click)="navigateTo('/attendance/department')">
+        <i class="fa fa-building"></i> Department View
+      </button>
+    </div>
+  </div>
+</div>

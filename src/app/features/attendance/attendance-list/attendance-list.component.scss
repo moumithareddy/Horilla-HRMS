@@ -1,0 +1,109 @@
+.attendance-list-container {
+  padding: 16px;
+  
+  .filter-card {
+    margin-bottom: 24px;
+    
+    .filter-actions-container {
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+      
+      .filter-form {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        
+        .filter-fields {
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+          
+          .top-row {
+            display: flex;
+            gap: 16px;
+            
+            mat-form-field {
+              flex: 1;
+            }
+          }
+          
+          .date-row {
+            display: flex;
+            gap: 16px;
+            
+            mat-form-field {
+              flex: 1;
+            }
+          }
+        }
+        
+        .filter-actions {
+          display: flex;
+          gap: 8px;
+        }
+      }
+      
+      .record-actions {
+        display: flex;
+        gap: 8px;
+        align-items: flex-start;
+      }
+    }
+  }
+  
+  .loading-container {
+    display: flex;
+    justify-content: center;
+    padding: 32px;
+  }
+  
+  .table-container {
+    background-color: white;
+    border-radius: 4px;
+    overflow: hidden;
+    
+    table {
+      width: 100%;
+      
+      .mat-cell, .mat-header-cell {
+        padding: 0 16px;
+      }
+      
+      .status-badge {
+        display: inline-block;
+        padding: 4px 8px;
+        border-radius: 12px;
+        color: white;
+        font-size: 12px;
+        text-transform: capitalize;
+      }
+    }
+  }
+}
+
+/* Responsive styles */
+@media (max-width: 960px) {
+  .attendance-list-container {
+    .filter-card {
+      .filter-actions-container {
+        flex-direction: column;
+        
+        .filter-form {
+          .filter-fields {
+            .top-row {
+              flex-direction: column;
+            }
+            
+            .date-row {
+              flex-direction: column;
+            }
+          }
+        }
+      }
+    }
+  }
+}

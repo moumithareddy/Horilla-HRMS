@@ -1,0 +1,158 @@
+.department-attendance-container {
+  padding: 24px;
+  
+  .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    
+    .header-content {
+      h1 {
+        margin: 0;
+        font-size: 28px;
+        font-weight: 500;
+      }
+      
+      .subtitle {
+        color: rgba(0, 0, 0, 0.6);
+        font-size: 16px;
+      }
+    }
+  }
+  
+  .filter-card {
+    margin-bottom: 24px;
+    
+    .filter-form {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      
+      mat-form-field {
+        min-width: 200px;
+        flex: 1;
+      }
+    }
+  }
+  
+  .attendance-table-container {
+    position: relative;
+    min-height: 400px;
+    
+    .loading-spinner {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(255, 255, 255, 0.7);
+      z-index: 1;
+    }
+    
+    .table-container {
+      overflow-x: auto;
+      
+      .attendance-table {
+        width: 100%;
+        
+        .mat-mdc-header-cell {
+          font-weight: 500;
+          color: rgba(0, 0, 0, 0.87);
+        }
+        
+        .employee-position {
+          font-size: 12px;
+          color: rgba(0, 0, 0, 0.6);
+          margin-top: 4px;
+        }
+        
+        .status-badge {
+          padding: 4px 12px;
+          border-radius: 16px;
+          font-size: 12px;
+          font-weight: 500;
+          display: inline-block;
+          text-transform: uppercase;
+          
+          &.present {
+            background-color: rgba(76, 175, 80, 0.1);
+            color: #4CAF50;
+          }
+          
+          &.absent {
+            background-color: rgba(244, 67, 54, 0.1);
+            color: #F44336;
+          }
+          
+          &.late {
+            background-color: rgba(255, 193, 7, 0.1);
+            color: #FFC107;
+          }
+          
+          &.halfday {
+            background-color: rgba(33, 150, 243, 0.1);
+            color: #2196F3;
+          }
+        }
+      }
+      
+      .no-data {
+        text-align: center;
+        padding: 48px 0;
+        
+        .empty-state {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 12px;
+          
+          .empty-icon {
+            width: 48px;
+            height: 48px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 50%;
+            background-color: rgba(0, 0, 0, 0.04);
+            margin-bottom: 8px;
+            
+            mat-icon {
+              font-size: 24px;
+              color: rgba(0, 0, 0, 0.38);
+            }
+          }
+          
+          .empty-text {
+            font-size: 16px;
+            color: rgba(0, 0, 0, 0.6);
+          }
+        }
+      }
+    }
+  }
+}
+
+// Responsive layout
+@media screen and (max-width: 768px) {
+  .department-attendance-container {
+    padding: 16px;
+    
+    .page-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 16px;
+      
+      .header-actions {
+        width: 100%;
+        
+        button {
+          width: 100%;
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,22 @@
+<div class="page-header">
+  <div class="header-content">
+    <div class="title-section">
+      <mat-icon *ngIf="icon">{{ icon }}</mat-icon>
+      <div class="title-text">
+        <h1>{{ title }}</h1>
+        <p *ngIf="subtitle">{{ subtitle }}</p>
+      </div>
+    </div>
+    <div class="actions">
+      <div class="clock-buttons" *ngIf="showClockButtons">
+        <button mat-raised-button color="primary" *ngIf="isClockIn" (click)="onClockIn()">
+          <mat-icon>login</mat-icon> Clock In
+        </button>
+        <button mat-raised-button color="warn" *ngIf="!isClockIn" (click)="onClockOut()">
+          <mat-icon>logout</mat-icon> Clock Out
+        </button>
+      </div>
+      <ng-content></ng-content>
+    </div>
+  </div>
+</div>

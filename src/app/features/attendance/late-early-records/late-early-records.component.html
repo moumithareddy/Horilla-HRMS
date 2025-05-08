@@ -1,0 +1,247 @@
+<app-page-header 
+  title="Late Coming & Early Leaving Records" 
+  subtitle="Track and monitor attendance time deviations"
+  icon="fa fa-clock">
+</app-page-header>
+
+<div class="late-early-container">
+  <!-- Summary Cards -->
+  <div class="summary-cards">
+    <mat-card class="summary-card">
+      <mat-card-content>
+        <div class="summary-content">
+          <div class="summary-icon late-icon">
+            <i class="fa fa-clock"></i>
+          </div>
+          <div class="summary-details">
+            <h3>Late Coming</h3>
+            <p class="summary-value">{{ totalLateRecords }}</p>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="summary-card">
+      <mat-card-content>
+        <div class="summary-content">
+          <div class="summary-icon early-icon">
+            <i class="fa fa-sign-out-alt"></i>
+          </div>
+          <div class="summary-details">
+            <h3>Early Leaving</h3>
+            <p class="summary-value">{{ totalEarlyLeavingRecords }}</p>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="summary-card">
+      <mat-card-content>
+        <div class="summary-content">
+          <div class="summary-icon both-icon">
+            <i class="fa fa-exchange-alt"></i>
+          </div>
+          <div class="summary-details">
+            <h3>Both Types</h3>
+            <p class="summary-value">{{ totalBothTypes }}</p>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="summary-card">
+      <mat-card-content>
+        <div class="summary-content">
+          <div class="summary-icon avg-icon">
+            <i class="fa fa-chart-line"></i>
+          </div>
+          <div class="summary-details">
+            <h3>Avg. Deviation</h3>
+            <p class="summary-value">{{ averageDeviation | number:'1.0-0' }} min</p>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Filter Panel -->
+  <mat-card class="filter-card">
+    <mat-card-content>
+      <form [formGroup]="filterForm" (ngSubmit)="applyFilter()">
+        <div class="filter-form">
+          <div class="filter-row">
+            <mat-form-field appearance="outline">
+              <mat-label>Deviation Type</mat-label>
+              <mat-select formControlName="attendanceType">
+                <mat-option value="all">All Types</mat-option>
+                <mat-option value="Late Coming">Late Coming</mat-option>
+                <mat-option value="Early Leaving">Early Leaving</mat-option>
+                <mat-option value="Both">Both Types</mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Department</mat-label>
+              <mat-select formControlName="departmentId">
+                <mat-option value="">All Departments</mat-option>
+                <!-- In a real app, this would be populated from API -->
+                <mat-option value="Engineering">Engineering</mat-option>
+                <mat-option value="Marketing">Marketing</mat-option>
+                <mat-option value="Sales">Sales</mat-option>
+                <mat-option value="HR">Human Resources</mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Employee</mat-label>
+              <mat-select formControlName="employeeId">
+                <mat-option value="">All Employees</mat-option>
+                <!-- In a real app, this would be populated from API -->
+                <mat-option value="101">John Doe</mat-option>
+                <mat-option value="102">Jane Smith</mat-option>
+                <mat-option value="103">Michael Johnson</mat-option>
+                <mat-option value="104">Sarah Williams</mat-option>
+                <mat-option value="105">Robert Brown</mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+
+          <div class="filter-row" formGroupName="dateRange">
+            <mat-form-field appearance="outline">
+              <mat-label>From Date</mat-label>
+              <input matInput [matDatepicker]="startPicker" formControlName="start">
+              <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
+              <mat-datepicker #startPicker></mat-datepicker>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>To Date</mat-label>
+              <input matInput [matDatepicker]="endPicker" formControlName="end">
+              <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
+              <mat-datepicker #endPicker></mat-datepicker>
+            </mat-form-field>
+          </div>
+
+          <div class="filter-actions">
+            <button mat-raised-button color="primary" type="submit" [disabled]="isLoading">
+              <mat-icon>filter_list</mat-icon> Filter
+            </button>
+            <button mat-button type="button" (click)="resetFilter()" [disabled]="isLoading">
+              <mat-icon>refresh</mat-icon> Reset
+            </button>
+          </div>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+  
+  <!-- Records Data Table -->
+  <mat-card class="data-card">
+    <mat-card-content>
+      <div class="table-container">
+        <table mat-table [dataSource]="dataSource" matSort class="late-early-table">
+          <!-- Employee Column -->
+          <ng-container matColumnDef="employee_name">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Employee</th>
+            <td mat-cell *matCellDef="let record">{{ record.employee_name }}</td>
+          </ng-container>
+          
+          <!-- Department Column -->
+          <ng-container matColumnDef="department">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Department</th>
+            <td mat-cell *matCellDef="let record">{{ record.department }}</td>
+          </ng-container>
+          
+          <!-- Date Column -->
+          <ng-container matColumnDef="attendance_date">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Date</th>
+            <td mat-cell *matCellDef="let record">{{ record.attendance_date }}</td>
+          </ng-container>
+          
+          <!-- Type Column -->
+          <ng-container matColumnDef="attendance_type">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Type</th>
+            <td mat-cell *matCellDef="let record">
+              <span class="type-badge" [ngClass]="getTypeClass(record.attendance_type)">
+                {{ record.attendance_type }}
+              </span>
+            </td>
+          </ng-container>
+          
+          <!-- Scheduled Start Column -->
+          <ng-container matColumnDef="scheduled_start">
+            <th mat-header-cell *matHeaderCellDef>Scheduled In</th>
+            <td mat-cell *matCellDef="let record">{{ record.scheduled_start }}</td>
+          </ng-container>
+          
+          <!-- Actual Start Column -->
+          <ng-container matColumnDef="actual_start">
+            <th mat-header-cell *matHeaderCellDef>Actual In</th>
+            <td mat-cell *matCellDef="let record" 
+              [ngClass]="{'late-cell': record.attendance_type === 'Late Coming' || record.attendance_type === 'Both'}">
+              {{ record.actual_start }}
+            </td>
+          </ng-container>
+          
+          <!-- Scheduled End Column -->
+          <ng-container matColumnDef="scheduled_end">
+            <th mat-header-cell *matHeaderCellDef>Scheduled Out</th>
+            <td mat-cell *matCellDef="let record">{{ record.scheduled_end }}</td>
+          </ng-container>
+          
+          <!-- Actual End Column -->
+          <ng-container matColumnDef="actual_end">
+            <th mat-header-cell *matHeaderCellDef>Actual Out</th>
+            <td mat-cell *matCellDef="let record"
+              [ngClass]="{'early-cell': record.attendance_type === 'Early Leaving' || record.attendance_type === 'Both'}">
+              {{ record.actual_end }}
+            </td>
+          </ng-container>
+          
+          <!-- Time Deviation Column -->
+          <ng-container matColumnDef="time_deviation">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Deviation</th>
+            <td mat-cell *matCellDef="let record" class="deviation-cell">
+              {{ formatTimeDeviation(record.time_deviation) }}
+            </td>
+          </ng-container>
+          
+          <!-- Status Column -->
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
+            <td mat-cell *matCellDef="let record">
+              <span class="status-badge" [ngClass]="getStatusClass(record.status)">
+                {{ record.status }}
+              </span>
+            </td>
+          </ng-container>
+          
+          <!-- Reason Column -->
+          <ng-container matColumnDef="reason">
+            <th mat-header-cell *matHeaderCellDef>Reason</th>
+            <td mat-cell *matCellDef="let record">{{ record.reason || '-' }}</td>
+          </ng-container>
+          
+          <!-- Table Rows -->
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+          
+          <!-- No Results Row -->
+          <tr class="mat-row" *matNoDataRow>
+            <td class="mat-cell no-data-cell" [attr.colspan]="displayedColumns.length">
+              No late/early records found with the current filter criteria.
+            </td>
+          </tr>
+        </table>
+        
+        <!-- Paginator -->
+        <mat-paginator [pageSizeOptions]="[5, 10, 25, 50]" showFirstLastButtons></mat-paginator>
+      </div>
+    </mat-card-content>
+  </mat-card>
+  
+  <!-- Loading Spinner -->
+  <div *ngIf="isLoading" class="loading-overlay">
+    <app-loading-spinner></app-loading-spinner>
+  </div>
+</div>

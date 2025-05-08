@@ -1,0 +1,101 @@
+.requests-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 20px;
+}
+
+.filter-card {
+  background-color: #f8f9fa;
+}
+
+.filter-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.filter-row {
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.filter-row mat-form-field {
+  flex: 1;
+  min-width: 200px;
+}
+
+.filter-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.table-container {
+  min-height: 400px;
+  overflow: auto;
+}
+
+.requests-table {
+  width: 100%;
+}
+
+.reason-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  max-width: 250px;
+}
+
+.comments-text {
+  font-size: 0.85em;
+  color: #666;
+  font-style: italic;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 5px;
+}
+
+.status-badge {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.85em;
+  font-weight: 500;
+}
+
+.status-approved {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.status-rejected {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.status-pending {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
+
+.no-data-cell {
+  padding: 20px;
+  text-align: center;
+  color: #666;
+}

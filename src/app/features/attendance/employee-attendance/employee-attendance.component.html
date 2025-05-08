@@ -1,0 +1,214 @@
+<app-page-header 
+  title="Employee Attendance" 
+  subtitle="View individual employee attendance details"
+  icon="fa fa-user-clock">
+</app-page-header>
+
+<div class="employee-container">
+  <!-- Filter Card -->
+  <mat-card class="filter-card">
+    <mat-card-content>
+      <form [formGroup]="employeeForm" (ngSubmit)="applyFilter()">
+        <div class="filter-form">
+          <div class="filter-fields">
+            <mat-form-field appearance="outline">
+              <mat-label>Employee</mat-label>
+              <mat-select formControlName="employeeId">
+                <mat-option *ngFor="let emp of employees" [value]="emp.id">
+                  {{ emp.employee_first_name }} {{ emp.employee_last_name }} ({{ emp.department_name }})
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <div class="date-fields" formGroupName="dateRange">
+              <mat-form-field appearance="outline">
+                <mat-label>Start Date</mat-label>
+                <input matInput [matDatepicker]="startPicker" formControlName="start">
+                <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
+                <mat-datepicker #startPicker></mat-datepicker>
+              </mat-form-field>
+              
+              <mat-form-field appearance="outline">
+                <mat-label>End Date</mat-label>
+                <input matInput [matDatepicker]="endPicker" formControlName="end">
+                <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
+                <mat-datepicker #endPicker></mat-datepicker>
+              </mat-form-field>
+            </div>
+          </div>
+          
+          <div class="filter-actions">
+            <button mat-raised-button color="primary" type="submit">
+              <i class="fa fa-search"></i> View Attendance
+            </button>
+          </div>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Loading Spinner -->
+  <div *ngIf="isLoading" class="loading-container">
+    <app-loading-spinner></app-loading-spinner>
+  </div>
+
+  <!-- Employee Profile and Summary -->
+  <div *ngIf="!isLoading && selectedEmployee && employeeSummary" class="employee-data">
+    <mat-card class="profile-card">
+      <mat-card-content>
+        <div class="employee-profile">
+          <div class="profile-avatar">
+            <div class="avatar">
+                {{ selectedEmployee.employee_first_name.charAt(0) }}{{ selectedEmployee.employee_last_name.charAt(0) }}
+            </div>
+          </div>
+          <div class="profile-info">
+            <h2>{{ selectedEmployee.employee_first_name }} {{ selectedEmployee.employee_last_name }}</h2>
+            <p class="subtitle">{{ selectedEmployee.designation }} - {{ selectedEmployee.department_name }}</p>
+            
+            <div class="attendance-overview">
+              <div class="attendance-rate">
+                <p class="label">Attendance Rate</p>
+                <div class="percentage">{{ employeeSummary.attendancePercentage.toFixed(1) }}%</div>
+                <div class="progress-bar">
+                  <div class="progress" [style.width.%]="employeeSummary.attendancePercentage"></div>
+                </div>
+              </div>
+              
+              <div class="work-hours">
+                <div class="hours-item">
+                  <p class="label">Total Work Hours</p>
+                  <p class="value">{{ employeeSummary.totalWorkHours.toFixed(1) }}</p>
+                </div>
+                <div class="hours-item">
+                  <p class="label">Overtime Hours</p>
+                  <p class="value">{{ employeeSummary.totalOvertimeHours.toFixed(1) }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Charts Section -->
+    <div class="charts-section">
+      <mat-card class="chart-card">
+        <mat-card-header>
+          <mat-card-title>Attendance Status</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="chart-container status-chart">
+            <canvas #attendanceStatusCanvas></canvas>
+          </div>
+          <div class="status-legend">
+            <div class="status-item">
+              <div class="status-color status-present"></div>
+              <span>Present ({{ employeeSummary.present }})</span>
+            </div>
+            <div class="status-item">
+              <div class="status-color status-absent"></div>
+              <span>Absent ({{ employeeSummary.absent }})</span>
+            </div>
+            <div class="status-item">
+              <div class="status-color status-late"></div>
+              <span>Late ({{ employeeSummary.late }})</span>
+            </div>
+            <div class="status-item">
+              <div class="status-color status-half-day"></div>
+              <span>Half Day ({{ employeeSummary.halfDay }})</span>
+            </div>
+            <div class="status-item">
+              <div class="status-color status-on-leave"></div>
+              <span>On Leave ({{ employeeSummary.onLeave }})</span>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+      
+      <mat-card class="chart-card">
+        <mat-card-header>
+          <mat-card-title>Work Hours</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="chart-container hours-chart">
+            <canvas #workHoursCanvas></canvas>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <!-- Attendance Records -->
+    <mat-card class="records-card">
+      <mat-card-header>
+        <mat-card-title>Attendance Records</mat-card-title>
+        <mat-card-subtitle>
+          {{ employeeForm.get('dateRange.start')?.value | date:'mediumDate' }} - 
+          {{ employeeForm.get('dateRange.end')?.value | date:'mediumDate' }}
+        </mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <div *ngIf="attendanceRecords.length === 0" class="no-records">
+          <p>No attendance records found for the selected period.</p>
+        </div>
+        
+        <table *ngIf="attendanceRecords.length > 0" mat-table [dataSource]="attendanceRecords" class="records-table">
+          <!-- Date Column -->
+          <ng-container matColumnDef="date">
+            <th mat-header-cell *matHeaderCellDef>Date</th>
+            <td mat-cell *matCellDef="let record">{{ record.attendance_date | date:'mediumDate' }}</td>
+          </ng-container>
+          
+          <!-- Status Column -->
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef>Status</th>
+            <td mat-cell *matCellDef="let record">
+              <span class="status-badge" [ngClass]="getStatusClass(record.attendance_status)">
+                {{ record.attendance_status }}
+              </span>
+            </td>
+          </ng-container>
+          
+          <!-- Clock In Column -->
+          <ng-container matColumnDef="clockIn">
+            <th mat-header-cell *matHeaderCellDef>Clock In</th>
+            <td mat-cell *matCellDef="let record">{{ record.attendance_clock_in_time || '-' }}</td>
+          </ng-container>
+          
+          <!-- Clock Out Column -->
+          <ng-container matColumnDef="clockOut">
+            <th mat-header-cell *matHeaderCellDef>Clock Out</th>
+            <td mat-cell *matCellDef="let record">{{ record.attendance_clock_out_time || '-' }}</td>
+          </ng-container>
+          
+          <!-- Work Hours Column -->
+          <ng-container matColumnDef="workHours">
+            <th mat-header-cell *matHeaderCellDef>Work Hours</th>
+            <td mat-cell *matCellDef="let record">{{ record.attendance_worked_hour?.toFixed(2) || '-' }}</td>
+          </ng-container>
+          
+          <!-- Overtime Column -->
+          <ng-container matColumnDef="overtime">
+            <th mat-header-cell *matHeaderCellDef>Overtime</th>
+            <td mat-cell *matCellDef="let record">{{ record.attendance_overtime_hour?.toFixed(2) || '-' }}</td>
+          </ng-container>
+          
+          <tr mat-header-row *matHeaderRowDef="['date', 'status', 'clockIn', 'clockOut', 'workHours', 'overtime']"></tr>
+          <tr mat-row *matRowDef="let row; columns: ['date', 'status', 'clockIn', 'clockOut', 'workHours', 'overtime'];"></tr>
+        </table>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- No Employee Selected Message -->
+  <div *ngIf="!isLoading && !selectedEmployee" class="no-employee-container">
+    <mat-card>
+      <mat-card-content>
+        <div class="no-employee-message">
+          <i class="fa fa-user-clock"></i>
+          <p>Select an employee to view attendance details</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

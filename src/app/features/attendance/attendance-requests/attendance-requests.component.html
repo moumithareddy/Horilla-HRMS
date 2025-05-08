@@ -1,0 +1,170 @@
+<app-page-header 
+  title="Attendance Requests" 
+  subtitle="Review and process attendance adjustment requests"
+  icon="fa fa-clipboard-list">
+</app-page-header>
+
+<div class="requests-container">
+  <!-- Filter Panel -->
+  <mat-card class="filter-card">
+    <mat-card-content>
+      <form [formGroup]="filterForm" (ngSubmit)="applyFilter()">
+        <div class="filter-form">
+          <div class="filter-row">
+            <mat-form-field appearance="outline">
+              <mat-label>Status</mat-label>
+              <mat-select formControlName="status">
+                <mat-option value="all">All</mat-option>
+                <mat-option value="Pending">Pending</mat-option>
+                <mat-option value="Approved">Approved</mat-option>
+                <mat-option value="Rejected">Rejected</mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Employee</mat-label>
+              <mat-select formControlName="employeeId">
+                <mat-option value="">All Employees</mat-option>
+                <!-- In a real app, this would be populated from API -->
+                <mat-option value="101">John Doe</mat-option>
+                <mat-option value="102">Jane Smith</mat-option>
+                <mat-option value="103">Michael Johnson</mat-option>
+                <mat-option value="104">Sarah Williams</mat-option>
+                <mat-option value="105">Robert Brown</mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+
+          <div class="filter-row" formGroupName="dateRange">
+            <mat-form-field appearance="outline">
+              <mat-label>From Date</mat-label>
+              <input matInput [matDatepicker]="startPicker" formControlName="start">
+              <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
+              <mat-datepicker #startPicker></mat-datepicker>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>To Date</mat-label>
+              <input matInput [matDatepicker]="endPicker" formControlName="end">
+              <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
+              <mat-datepicker #endPicker></mat-datepicker>
+            </mat-form-field>
+          </div>
+
+          <div class="filter-actions">
+            <button mat-raised-button color="primary" type="submit" [disabled]="isLoading">
+              <mat-icon>filter_list</mat-icon> Filter
+            </button>
+            <button mat-button type="button" (click)="resetFilter()" [disabled]="isLoading">
+              <mat-icon>refresh</mat-icon> Reset
+            </button>
+          </div>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+  
+  <!-- Request List Table -->
+  <mat-card class="data-card">
+    <mat-card-content>
+      <div class="table-container">
+        <table mat-table [dataSource]="dataSource" matSort class="requests-table">
+          <!-- Employee Column -->
+          <ng-container matColumnDef="employee_name">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Employee</th>
+            <td mat-cell *matCellDef="let request">{{ request.employee_name }}</td>
+          </ng-container>
+          
+          <!-- Request Date Column -->
+          <ng-container matColumnDef="request_date">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Request Date</th>
+            <td mat-cell *matCellDef="let request">{{ request.request_date }}</td>
+          </ng-container>
+          
+          <!-- Request Type Column -->
+          <ng-container matColumnDef="request_type">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Type</th>
+            <td mat-cell *matCellDef="let request">{{ request.request_type }}</td>
+          </ng-container>
+          
+          <!-- Requested Date Column -->
+          <ng-container matColumnDef="requested_date">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Date</th>
+            <td mat-cell *matCellDef="let request">{{ request.requested_date }}</td>
+          </ng-container>
+          
+          <!-- Clock In Column -->
+          <ng-container matColumnDef="clock_in_time">
+            <th mat-header-cell *matHeaderCellDef>Clock In</th>
+            <td mat-cell *matCellDef="let request">{{ request.clock_in_time || '-' }}</td>
+          </ng-container>
+          
+          <!-- Clock Out Column -->
+          <ng-container matColumnDef="clock_out_time">
+            <th mat-header-cell *matHeaderCellDef>Clock Out</th>
+            <td mat-cell *matCellDef="let request">{{ request.clock_out_time || '-' }}</td>
+          </ng-container>
+          
+          <!-- Reason Column -->
+          <ng-container matColumnDef="request_reason">
+            <th mat-header-cell *matHeaderCellDef>Reason</th>
+            <td mat-cell *matCellDef="let request">
+              <div class="reason-cell">
+                <span class="reason-text">{{ request.request_reason }}</span>
+                <span *ngIf="request.comments" class="comments-text">
+                  <strong>Comments:</strong> {{ request.comments }}
+                </span>
+              </div>
+            </td>
+          </ng-container>
+          
+          <!-- Status Column -->
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
+            <td mat-cell *matCellDef="let request">
+              <span class="status-badge" [ngClass]="getStatusClass(request.status)">
+                {{ request.status }}
+              </span>
+            </td>
+          </ng-container>
+          
+          <!-- Actions Column -->
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef>Actions</th>
+            <td mat-cell *matCellDef="let request">
+              <div class="action-buttons">
+                <button *ngIf="request.status === 'Pending'" mat-icon-button color="primary" 
+                  matTooltip="Approve Request" (click)="approveRequest(request.id)">
+                  <mat-icon>check_circle</mat-icon>
+                </button>
+                <button *ngIf="request.status === 'Pending'" mat-icon-button color="warn" 
+                  matTooltip="Reject Request" (click)="openCommentDialog(request.id)">
+                  <mat-icon>cancel</mat-icon>
+                </button>
+              </div>
+            </td>
+          </ng-container>
+          
+          <!-- Table Rows -->
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+          
+          <!-- No Results Row -->
+          <tr class="mat-row" *matNoDataRow>
+            <td class="mat-cell no-data-cell" [attr.colspan]="displayedColumns.length">
+              No attendance requests found with the current filter criteria.
+            </td>
+          </tr>
+        </table>
+        
+        <!-- Paginator -->
+        <mat-paginator [pageSizeOptions]="[5, 10, 25, 50]" showFirstLastButtons></mat-paginator>
+      </div>
+    </mat-card-content>
+  </mat-card>
+  
+  <!-- Loading Spinner -->
+  <div *ngIf="isLoading" class="loading-overlay">
+    <app-loading-spinner></app-loading-spinner>
+  </div>
+</div>

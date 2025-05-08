@@ -1,0 +1,100 @@
+<div class="attendance-dialog-container">
+  <h2 mat-dialog-title>Add Attendance Record</h2>
+  
+  <div *ngIf="isLoading" class="loading-overlay">
+    <app-loading-spinner></app-loading-spinner>
+  </div>
+  
+  <mat-dialog-content class="dialog-content">
+    <form [formGroup]="attendanceForm">
+      <!-- Attendance Form with Multi-Select -->
+      <div formGroupName="sharedAttendance" class="attendance-form">
+        <div class="form-row">
+          <mat-form-field appearance="outline">
+            <mat-label>Employees</mat-label>
+            <mat-select formControlName="employee_ids" multiple required>
+              <mat-option *ngFor="let employee of employees" [value]="employee.id">
+                {{ employee.first_name }} {{ employee.last_name }}
+              </mat-option>
+            </mat-select>
+            <mat-hint>Select one or more employees</mat-hint>
+            <mat-error>At least one employee is required</mat-error>
+          </mat-form-field>
+        </div>
+        
+        <div class="form-row">
+          <mat-form-field appearance="outline">
+            <mat-label>Department</mat-label>
+            <mat-select formControlName="department_id">
+              <mat-option [value]="">-- Select Department --</mat-option>
+              <mat-option *ngFor="let department of departments" [value]="department.id">
+                {{ department.department_name }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+        
+        <div class="form-row">
+          <mat-form-field appearance="outline">
+            <mat-label>Date</mat-label>
+            <input matInput [matDatepicker]="datePicker" formControlName="attendance_date" required>
+            <mat-datepicker-toggle matSuffix [for]="datePicker"></mat-datepicker-toggle>
+            <mat-datepicker #datePicker></mat-datepicker>
+            <mat-error>Date is required</mat-error>
+          </mat-form-field>
+        </div>
+        
+        <div class="form-row two-column">
+          <mat-form-field appearance="outline">
+            <mat-label>Clock In Time</mat-label>
+            <input matInput type="time" formControlName="attendance_clock_in_time" (blur)="calculateWorkHours()">
+          </mat-form-field>
+          
+          <mat-form-field appearance="outline">
+            <mat-label>Clock Out Time</mat-label>
+            <input matInput type="time" formControlName="attendance_clock_out_time" (blur)="calculateWorkHours()">
+          </mat-form-field>
+        </div>
+        
+        <div class="form-row">
+          <mat-form-field appearance="outline">
+            <mat-label>Status</mat-label>
+            <mat-select formControlName="attendance_status" required>
+              <mat-option *ngFor="let status of statuses" [value]="status.id">
+                {{ status.name }}
+              </mat-option>
+            </mat-select>
+            <mat-error>Status is required</mat-error>
+          </mat-form-field>
+        </div>
+        
+        <div class="form-row two-column">
+          <mat-form-field appearance="outline">
+            <mat-label>Work Hours</mat-label>
+            <input matInput type="number" formControlName="attendance_worked_hour" min="0" step="0.5">
+          </mat-form-field>
+          
+          <mat-form-field appearance="outline">
+            <mat-label>Overtime Hours</mat-label>
+            <input matInput type="number" formControlName="attendance_overtime_hour" min="0" step="0.5">
+          </mat-form-field>
+        </div>
+        
+        <div class="form-row">
+          <mat-form-field appearance="outline">
+            <mat-label>Notes</mat-label>
+            <textarea matInput formControlName="attendance_notes" rows="3"></textarea>
+          </mat-form-field>
+        </div>
+      </div>
+    </form>
+  </mat-dialog-content>
+  
+  <mat-dialog-actions align="end">
+    <button mat-button (click)="cancel()" [disabled]="isLoading">Cancel</button>
+    <button mat-raised-button color="primary" (click)="submitAttendance()" 
+           [disabled]="attendanceForm.invalid || isLoading">
+      Save Records
+    </button>
+  </mat-dialog-actions>
+</div>

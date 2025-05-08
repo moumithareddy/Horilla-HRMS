@@ -1,0 +1,227 @@
+<app-page-header 
+  title="My Attendance" 
+  subtitle="Track your personal attendance records"
+  icon="fa fa-user-clock">
+</app-page-header>
+
+<div class="my-attendance-container">
+  <div class="header-actions">
+    <!-- Clock In/Out Section -->
+    <div class="clock-in-out-section">
+      <mat-card>
+        <mat-card-content>
+          <div class="clock-in-out-container">
+            <div class="current-time">
+              <h2>{{ currentTime | date:'mediumTime' }}</h2>
+              <p>{{ currentTime | date:'fullDate' }}</p>
+            </div>
+            <div class="clock-actions">
+              <button mat-raised-button color="primary" (click)="clockIn()" *ngIf="!isClockIn">
+                <i class="fa fa-sign-in-alt"></i> Clock In
+              </button>
+              <button mat-raised-button color="warn" (click)="clockOut()" *ngIf="isClockIn">
+                <i class="fa fa-sign-out-alt"></i> Clock Out
+              </button>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </div>
+
+  <!-- Filters & Action Buttons - Single Row -->
+  <div class="filter-actions-row">
+    <!-- Filter Section -->
+    <form [formGroup]="filterForm" (ngSubmit)="applyFilter()" class="filter-form">
+      <mat-form-field appearance="outline" class="filter-field">
+        <mat-label>Month</mat-label>
+        <mat-select formControlName="month">
+          <mat-option [value]="0">January</mat-option>
+          <mat-option [value]="1">February</mat-option>
+          <mat-option [value]="2">March</mat-option>
+          <mat-option [value]="3">April</mat-option>
+          <mat-option [value]="4">May</mat-option>
+          <mat-option [value]="5">June</mat-option>
+          <mat-option [value]="6">July</mat-option>
+          <mat-option [value]="7">August</mat-option>
+          <mat-option [value]="8">September</mat-option>
+          <mat-option [value]="9">October</mat-option>
+          <mat-option [value]="10">November</mat-option>
+          <mat-option [value]="11">December</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="filter-field">
+        <mat-label>Year</mat-label>
+        <mat-select formControlName="year">
+          <mat-option [value]="2023">2023</mat-option>
+          <mat-option [value]="2024">2024</mat-option>
+          <mat-option [value]="2025">2025</mat-option>
+          <mat-option [value]="2026">2026</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <button mat-raised-button color="primary" type="submit" [disabled]="isLoading" class="filter-button">
+        <mat-icon>search</mat-icon> View
+      </button>
+    </form>
+  </div>
+
+  <!-- Attendance Period -->
+  <div class="period-header">
+    <h2>{{ currentMonth }} {{ currentYear }}</h2>
+  </div>
+  
+  <!-- Summary Cards -->
+  <div class="summary-cards">
+    <mat-card class="summary-card">
+      <mat-card-content>
+        <div class="summary-content">
+          <div class="summary-icon present-icon">
+            <i class="fa fa-check"></i>
+          </div>
+          <div class="summary-details">
+            <h3>Present Days</h3>
+            <p class="summary-value">{{ summary.present }}</p>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="summary-card">
+      <mat-card-content>
+        <div class="summary-content">
+          <div class="summary-icon absent-icon">
+            <i class="fa fa-times"></i>
+          </div>
+          <div class="summary-details">
+            <h3>Absent Days</h3>
+            <p class="summary-value">{{ summary.absent }}</p>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="summary-card">
+      <mat-card-content>
+        <div class="summary-content">
+          <div class="summary-icon late-icon">
+            <i class="fa fa-hourglass-half"></i>
+          </div>
+          <div class="summary-details">
+            <h3>Late/Early Out</h3>
+            <p class="summary-value">{{ summary.late + summary.earlyOut }}</p>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="summary-card">
+      <mat-card-content>
+        <div class="summary-content">
+          <div class="summary-icon hours-icon">
+            <i class="fa fa-clock"></i>
+          </div>
+          <div class="summary-details">
+            <h3>Work Hours</h3>
+            <p class="summary-value">{{ summary.totalWorkHours }}</p>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="summary-card">
+      <mat-card-content>
+        <div class="summary-content">
+          <div class="summary-icon overtime-icon">
+            <i class="fa fa-plus-circle"></i>
+          </div>
+          <div class="summary-details">
+            <h3>Overtime</h3>
+            <p class="summary-value">{{ summary.totalOvertimeHours }}</p>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+  
+  <!-- Attendance Records Table -->
+  <mat-card class="data-card">
+    <mat-card-content>
+      <div class="table-container">
+        <table mat-table [dataSource]="dataSource" matSort class="attendance-table">
+          <!-- Date Column -->
+          <ng-container matColumnDef="date">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Date</th>
+            <td mat-cell *matCellDef="let record">{{ record.date }}</td>
+          </ng-container>
+          
+          <!-- Check In Column -->
+          <ng-container matColumnDef="check_in">
+            <th mat-header-cell *matHeaderCellDef>Check In</th>
+            <td mat-cell *matCellDef="let record">{{ formatTime(record.check_in) }}</td>
+          </ng-container>
+          
+          <!-- Check Out Column -->
+          <ng-container matColumnDef="check_out">
+            <th mat-header-cell *matHeaderCellDef>Check Out</th>
+            <td mat-cell *matCellDef="let record">{{ formatTime(record.check_out) }}</td>
+          </ng-container>
+          
+          <!-- Work Hours Column -->
+          <ng-container matColumnDef="work_hours">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Hours</th>
+            <td mat-cell *matCellDef="let record" class="hours-cell">{{ record.work_hours }}</td>
+          </ng-container>
+          
+          <!-- Status Column -->
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
+            <td mat-cell *matCellDef="let record">
+              <span class="status-badge" [ngClass]="getStatusClass(record.status)">
+                {{ record.status }}
+              </span>
+            </td>
+          </ng-container>
+          
+          <!-- Overtime Column -->
+          <ng-container matColumnDef="overtime">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Overtime</th>
+            <td mat-cell *matCellDef="let record" class="overtime-cell">{{ record.overtime || '-' }}</td>
+          </ng-container>
+          
+          <!-- Location Column -->
+          <ng-container matColumnDef="location">
+            <th mat-header-cell *matHeaderCellDef>Location</th>
+            <td mat-cell *matCellDef="let record">{{ record.location || '-' }}</td>
+          </ng-container>
+          
+          <!-- Notes Column -->
+          <ng-container matColumnDef="notes">
+            <th mat-header-cell *matHeaderCellDef>Notes</th>
+            <td mat-cell *matCellDef="let record">{{ record.notes || '-' }}</td>
+          </ng-container>
+          
+          <!-- Table Rows -->
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+          
+          <!-- No Results Row -->
+          <tr class="mat-row" *matNoDataRow>
+            <td class="mat-cell no-data-cell" [attr.colspan]="displayedColumns.length">
+              No attendance records found for this period.
+            </td>
+          </tr>
+        </table>
+        
+        <!-- Paginator -->
+        <mat-paginator [pageSizeOptions]="[5, 10, 25, 31]" showFirstLastButtons></mat-paginator>
+      </div>
+    </mat-card-content>
+  </mat-card>
+  
+  <!-- Loading Spinner -->
+  <div *ngIf="isLoading" class="loading-overlay">
+    <app-loading-spinner></app-loading-spinner>
+  </div>
+</div>

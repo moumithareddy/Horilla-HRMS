@@ -1,0 +1,156 @@
+<app-page-header 
+  title="Hour Account" 
+  subtitle="Track productive hours, breaks and idle time"
+  icon="fa fa-clock">
+</app-page-header>
+
+<div class="hour-account-container">
+  <!-- Filter Panel -->
+  <mat-card class="filter-card">
+    <mat-card-content>
+      <form [formGroup]="filterForm" (ngSubmit)="applyFilter()">
+        <div class="filter-form">
+          <div class="filter-row">
+            <mat-form-field appearance="outline">
+              <mat-label>Department</mat-label>
+              <mat-select formControlName="departmentId">
+                <mat-option value="">All Departments</mat-option>
+                <!-- In a real app, this would be populated from API -->
+                <mat-option value="1">Engineering</mat-option>
+                <mat-option value="2">Marketing</mat-option>
+                <mat-option value="3">Sales</mat-option>
+                <mat-option value="4">Human Resources</mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Employee</mat-label>
+              <mat-select formControlName="employeeId">
+                <mat-option value="">All Employees</mat-option>
+                <!-- In a real app, this would be populated from API -->
+                <mat-option value="101">John Doe</mat-option>
+                <mat-option value="102">Jane Smith</mat-option>
+                <mat-option value="103">Michael Johnson</mat-option>
+                <mat-option value="104">Sarah Williams</mat-option>
+                <mat-option value="105">Robert Brown</mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+
+          <div class="filter-row" formGroupName="dateRange">
+            <mat-form-field appearance="outline">
+              <mat-label>From Date</mat-label>
+              <input matInput [matDatepicker]="startPicker" formControlName="start">
+              <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
+              <mat-datepicker #startPicker></mat-datepicker>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>To Date</mat-label>
+              <input matInput [matDatepicker]="endPicker" formControlName="end">
+              <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
+              <mat-datepicker #endPicker></mat-datepicker>
+            </mat-form-field>
+          </div>
+
+          <div class="filter-actions">
+            <button mat-raised-button color="primary" type="submit" [disabled]="isLoading">
+              <mat-icon>filter_list</mat-icon> Filter
+            </button>
+            <button mat-button type="button" (click)="resetFilter()" [disabled]="isLoading">
+              <mat-icon>refresh</mat-icon> Reset
+            </button>
+          </div>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+  
+  <!-- Hours Data Table -->
+  <mat-card class="data-card">
+    <mat-card-content>
+      <div class="table-container">
+        <table mat-table [dataSource]="dataSource" matSort class="hours-table">
+          <!-- Employee Column -->
+          <ng-container matColumnDef="employee_name">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Employee</th>
+            <td mat-cell *matCellDef="let record">{{ record.employee_name }}</td>
+          </ng-container>
+          
+          <!-- Date Column -->
+          <ng-container matColumnDef="attendance_date">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Date</th>
+            <td mat-cell *matCellDef="let record">{{ record.attendance_date }}</td>
+          </ng-container>
+          
+          <!-- Clock In Column -->
+          <ng-container matColumnDef="clock_in_time">
+            <th mat-header-cell *matHeaderCellDef>Clock In</th>
+            <td mat-cell *matCellDef="let record">{{ record.clock_in_time }}</td>
+          </ng-container>
+          
+          <!-- Clock Out Column -->
+          <ng-container matColumnDef="clock_out_time">
+            <th mat-header-cell *matHeaderCellDef>Clock Out</th>
+            <td mat-cell *matCellDef="let record">{{ record.clock_out_time }}</td>
+          </ng-container>
+          
+          <!-- Productive Hours Column -->
+          <ng-container matColumnDef="productive_hours">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Productive Hours</th>
+            <td mat-cell *matCellDef="let record">{{ record.productive_hours }} hrs</td>
+          </ng-container>
+          
+          <!-- Break Duration Column -->
+          <ng-container matColumnDef="break_duration">
+            <th mat-header-cell *matHeaderCellDef>Break</th>
+            <td mat-cell *matCellDef="let record">{{ record.break_duration }} hrs</td>
+          </ng-container>
+          
+          <!-- Idle Time Column -->
+          <ng-container matColumnDef="idle_time">
+            <th mat-header-cell *matHeaderCellDef>Idle Time</th>
+            <td mat-cell *matCellDef="let record">{{ record.idle_time || 0 }} hrs</td>
+          </ng-container>
+          
+          <!-- Overtime Column -->
+          <ng-container matColumnDef="overtime">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Overtime</th>
+            <td mat-cell *matCellDef="let record" class="overtime-cell">
+              {{ record.overtime > 0 ? (record.overtime + ' hrs') : '-' }}
+            </td>
+          </ng-container>
+          
+          <!-- Status Column -->
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
+            <td mat-cell *matCellDef="let record">
+              <span class="status-badge" [ngClass]="getStatusClass(record.status)">
+                {{ record.status }}
+              </span>
+            </td>
+          </ng-container>
+          
+          <!-- Table Rows -->
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+          
+          <!-- No Results Row -->
+          <tr class="mat-row" *matNoDataRow>
+            <td class="mat-cell no-data-cell" [attr.colspan]="displayedColumns.length">
+              No hour records found with the current filter criteria.
+            </td>
+          </tr>
+        </table>
+        
+        <!-- Paginator -->
+        <mat-paginator [pageSizeOptions]="[5, 10, 25, 50]" showFirstLastButtons></mat-paginator>
+      </div>
+    </mat-card-content>
+  </mat-card>
+  
+  <!-- Loading Spinner -->
+  <div *ngIf="isLoading" class="loading-overlay">
+    <app-loading-spinner></app-loading-spinner>
+  </div>
+</div>
